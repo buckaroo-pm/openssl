@@ -4,12 +4,12 @@ def merge_dicts(x, y):
   return z
 
 cxx_library(
-  name = 'apps',
-  header_namespace = '',
+  name = 'apps', 
+  header_namespace = '', 
   compiler_flags = [ 
     '-fPIC', 
     '-m64', 
-  ],
+  ], 
   preprocessor_flags = [ 
     '-DOPENSSL_USE_NODELETE', 
     '-DL_ENDIAN', 
@@ -4526,231 +4526,255 @@ cxx_binary(
   deps = [":ssl",":crypto"],
   visibility = []
 )
-genrule(
-    name = 'gen-crypto-include-internal-bn_conf-h', 
-    out = 'bn_conf.h', 
-    srcs = glob(["./*.pm","util/*.pl","util/perl/*.pm","external/perl/transfer/Text/*.pm","external/perl/Text-Template-1.46/lib/Text/*.pm","crypto/include/internal/*.in"]), 
-    cmd = '/usr/bin/perl "-I." -Mconfigdata "util/dofile.pl" \
-    "-oMakefile" crypto/include/internal/bn_conf.h.in > $OUT', 
-  )
 
 genrule(
-    name = 'gen-crypto-include-internal-dso_conf-h', 
-    out = 'dso_conf.h', 
-    srcs = glob(["./*.pm","util/*.pl","util/perl/*.pm","external/perl/transfer/Text/*.pm","external/perl/Text-Template-1.46/lib/Text/*.pm","crypto/include/internal/*.in"]), 
-    cmd = '/usr/bin/perl "-I." -Mconfigdata "util/dofile.pl" \
-    "-oMakefile" crypto/include/internal/dso_conf.h.in > $OUT', 
-  )
+  name = 'gen-crypto-include-internal-bn_conf-h', 
+  out = 'bn_conf.h', 
+  srcs = glob(["./*.pm","util/*.pl","util/perl/*.pm","external/perl/transfer/Text/*.pm","external/perl/Text-Template-1.46/lib/Text/*.pm","crypto/include/internal/*.in"]), 
+  cmd = '/usr/bin/perl "-I." -Mconfigdata "util/dofile.pl" \
+  "-oMakefile" crypto/include/internal/bn_conf.h.in > $OUT', 
+)
 
 genrule(
-    name = 'gen-include-openssl-opensslconf-h', 
-    out = 'opensslconf.h', 
-    srcs = glob(["./*.pm","util/*.pl","util/perl/*.pm","external/perl/transfer/Text/*.pm","external/perl/Text-Template-1.46/lib/Text/*.pm","include/openssl/*.in"]), 
-    cmd = '/usr/bin/perl "-I." -Mconfigdata "util/dofile.pl" \
-    "-oMakefile" include/openssl/opensslconf.h.in > $OUT', 
-  )
+  name = 'gen-crypto-include-internal-dso_conf-h', 
+  out = 'dso_conf.h', 
+  srcs = glob(["./*.pm","util/*.pl","util/perl/*.pm","external/perl/transfer/Text/*.pm","external/perl/Text-Template-1.46/lib/Text/*.pm","crypto/include/internal/*.in"]), 
+  cmd = '/usr/bin/perl "-I." -Mconfigdata "util/dofile.pl" \
+  "-oMakefile" crypto/include/internal/dso_conf.h.in > $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-aes-aes-x86_64-s', 
-    out = 'aes-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/aes/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-include-openssl-opensslconf-h', 
+  out = 'opensslconf.h', 
+  srcs = glob(["./*.pm","util/*.pl","util/perl/*.pm","external/perl/transfer/Text/*.pm","external/perl/Text-Template-1.46/lib/Text/*.pm","include/openssl/*.in"]), 
+  cmd = '/usr/bin/perl "-I." -Mconfigdata "util/dofile.pl" \
+  "-oMakefile" include/openssl/opensslconf.h.in > $OUT', 
+)
+
+# genrule(
+#   name = 'gen-crypto-aes-aes-x86_64-s', 
+#   out = 'aes-x86_64.s', 
+#   srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+#   cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+# )
 
 genrule(
-    name = 'gen-crypto-aes-aesni-mb-x86_64-s', 
-    out = 'aesni-mb-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/aes/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-aes-aes-x86_64-s', 
+  out = 'aes-x86_64.s', 
+  srcs = [
+    'crypto/perlasm/x86_64-xlate.pl', 
+    'crypto/aes/asm/aes-x86_64.pl', 
+  ], 
+  cmd = 'perl crypto/aes/asm/aes-x86_64.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-aes-aesni-sha1-x86_64-s', 
-    out = 'aesni-sha1-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/aes/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-aes-aesni-mb-x86_64-s', 
+  out = 'aesni-mb-x86_64.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-aes-aesni-sha256-x86_64-s', 
-    out = 'aesni-sha256-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/aes/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-aes-aesni-sha1-x86_64-s', 
+  out = 'aesni-sha1-x86_64.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-aes-bsaes-x86_64-s', 
-    out = 'bsaes-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/aes/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-aes-aesni-sha256-x86_64-s', 
+  out = 'aesni-sha256-x86_64.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-aes-aesni-x86_64-s', 
-    out = 'aesni-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/aes/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-aes-bsaes-x86_64-s', 
+  out = 'bsaes-x86_64.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-aes-vpaes-x86_64-s', 
-    out = 'vpaes-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/aes/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-aes-aesni-x86_64-s', 
+  out = 'aesni-x86_64.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-bn-rsaz-avx2-s', 
-    out = 'rsaz-avx2.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/bn/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-aes-vpaes-x86_64-s', 
+  out = 'vpaes-x86_64.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-bn-rsaz-x86_64-s', 
-    out = 'rsaz-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/bn/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-bn-rsaz-avx2-s', 
+  out = 'rsaz-avx2.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-bn-x86_64-gf2m-s', 
-    out = 'x86_64-gf2m.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/bn/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-bn-rsaz-x86_64-s', 
+  out = 'rsaz-x86_64.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-bn-x86_64-mont-s', 
-    out = 'x86_64-mont.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/bn/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-bn-x86_64-gf2m-s', 
+  out = 'x86_64-gf2m.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-bn-x86_64-mont5-s', 
-    out = 'x86_64-mont5.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/bn/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-bn-x86_64-mont-s', 
+  out = 'x86_64-mont.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-camellia-cmll-x86_64-s', 
-    out = 'cmll-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/camellia/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-bn-x86_64-mont5-s', 
+  out = 'x86_64-mont5.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-chacha-chacha-x86_64-s', 
-    out = 'chacha-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/chacha/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-camellia-cmll-x86_64-s', 
+  out = 'cmll-x86_64.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-buildinf-h', 
-    out = 'buildinf.h', 
-    srcs = glob(["./*","util/*.pl"]), 
-    cmd = '/usr/bin/perl util/mkbuildinf.pl "gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_CPUID_OBJ -DOPENSSL_IA32_SSE2 -DOPENSSL_BN_ASM_MONT -DOPENSSL_BN_ASM_MONT5 -DOPENSSL_BN_ASM_GF2m -DSHA1_ASM -DSHA256_ASM -DSHA512_ASM -DKECCAK1600_ASM -DRC4_ASM -DMD5_ASM -DAES_ASM -DVPAES_ASM -DBSAES_ASM -DGHASH_ASM -DECP_NISTZ256_ASM -DX25519_ASM -DPADLOCK_ASM -DPOLY1305_ASM -DNDEBUG" "linux-x86_64" > $OUT', 
-  )
+  name = 'gen-crypto-chacha-chacha-x86_64-s', 
+  out = 'chacha-x86_64.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-ec-ecp_nistz256-x86_64-s', 
-    out = 'ecp_nistz256-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'cd $SRCSDIR && ./crypto/perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-buildinf-h', 
+  out = 'buildinf.h', 
+  srcs = glob([
+    './*', 
+    'util/*.pl', 
+  ]), 
+  cmd = '/usr/bin/perl util/mkbuildinf.pl "gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_CPUID_OBJ -DOPENSSL_IA32_SSE2 -DOPENSSL_BN_ASM_MONT -DOPENSSL_BN_ASM_MONT5 -DOPENSSL_BN_ASM_GF2m -DSHA1_ASM -DSHA256_ASM -DSHA512_ASM -DKECCAK1600_ASM -DRC4_ASM -DMD5_ASM -DAES_ASM -DVPAES_ASM -DBSAES_ASM -DGHASH_ASM -DECP_NISTZ256_ASM -DX25519_ASM -DPADLOCK_ASM -DPOLY1305_ASM -DNDEBUG" "linux-x86_64" > $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-ec-x25519-x86_64-s', 
-    out = 'x25519-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/ec/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-ec-ecp_nistz256-x86_64-s', 
+  out = 'ecp_nistz256-x86_64.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'cd $SRCSDIR && ./crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-md5-md5-x86_64-s', 
-    out = 'md5-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/md5/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-ec-x25519-x86_64-s', 
+  out = 'x25519-x86_64.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-modes-aesni-gcm-x86_64-s', 
-    out = 'aesni-gcm-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/modes/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-md5-md5-x86_64-s', 
+  out = 'md5-x86_64.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-modes-ghash-x86_64-s', 
-    out = 'ghash-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/modes/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-modes-aesni-gcm-x86_64-s', 
+  out = 'aesni-gcm-x86_64.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-poly1305-poly1305-x86_64-s', 
-    out = 'poly1305-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/poly1305/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-modes-ghash-x86_64-s', 
+  out = 'ghash-x86_64.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-rc4-rc4-md5-x86_64-s', 
-    out = 'rc4-md5-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/rc4/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-poly1305-poly1305-x86_64-s', 
+  out = 'poly1305-x86_64.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-rc4-rc4-x86_64-s', 
-    out = 'rc4-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/rc4/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-rc4-rc4-md5-x86_64-s', 
+  out = 'rc4-md5-x86_64.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-sha-keccak1600-x86_64-s', 
-    out = 'keccak1600-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/sha/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-rc4-rc4-x86_64-s', 
+  out = 'rc4-x86_64.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-sha-sha1-mb-x86_64-s', 
-    out = 'sha1-mb-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/sha/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-sha-keccak1600-x86_64-s', 
+  out = 'keccak1600-x86_64.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-sha-sha1-x86_64-s', 
-    out = 'sha1-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/sha/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-sha-sha1-mb-x86_64-s', 
+  out = 'sha1-mb-x86_64.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
 
 genrule(
-    name = 'gen-crypto-sha-sha256-mb-x86_64-s', 
-    out = 'sha256-mb-x86_64.s', 
-    srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/sha/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
-  )
+  name = 'gen-crypto-sha-sha1-x86_64-s', 
+  out = 'sha1-x86_64.s', 
+  srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+  cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+)
+
+# genrule(
+#   name = 'gen-crypto-sha-sha256-mb-x86_64-s', 
+#   out = 'sha256-mb-x86_64.s', 
+#   srcs = glob(["./*","crypto/perlasm/*.pl"]), 
+#   cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
+# )
+
+genrule(
+  name = 'gen-crypto-sha-sha256-mb-x86_64-s', 
+  out = 'sha256-mb-x86_64.s', 
+  srcs = [
+    'crypto/perlasm/x86_64-xlate.pl', 
+    'crypto/sha/asm/sha256-mb-x86_64.pl', 
+  ], 
+  cmd = 'perl crypto/sha/asm/sha256-mb-x86_64.pl elf $OUT', 
+)
 
 genrule(
     name = 'gen-crypto-sha-sha256-x86_64-s', 
     out = 'sha256-x86_64.s', 
     srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/sha/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
+    cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
   )
 
 genrule(
     name = 'gen-crypto-sha-sha512-x86_64-s', 
     out = 'sha512-x86_64.s', 
     srcs = glob(["./*","crypto/perlasm/*.pl"]), 
-    cmd = 'perl crypto/sha/asm/../../perlasm/x86_64-xlate.pl elf $OUT', 
+    cmd = 'perl crypto/perlasm/x86_64-xlate.pl elf $OUT', 
   )
 
 genrule(
