@@ -63,33 +63,30 @@ cxx_library(
 )
 
 cxx_library(
-  name = "testutil",
+  name = 'testutil',
   header_namespace= '',
-  compiler_flags = ["-fPIC","-m64"],
-  preprocessor_flags = ["-DOPENSSL_USE_NODELETE","-DL_ENDIAN","-DOPENSSL_PIC","-DOPENSSL_CPUID_OBJ","-DOPENSSL_IA32_SSE2","-DOPENSSL_BN_ASM_MONT","-DOPENSSL_BN_ASM_MONT5","-DOPENSSL_BN_ASM_GF2m","-DSHA1_ASM","-DSHA256_ASM","-DSHA512_ASM","-DKECCAK1600_ASM","-DRC4_ASM","-DMD5_ASM","-DAES_ASM","-DVPAES_ASM","-DBSAES_ASM","-DGHASH_ASM","-DECP_NISTZ256_ASM","-DX25519_ASM","-DPADLOCK_ASM","-DPOLY1305_ASM","-DOPENSSLDIR=\"/usr/local/ssl\"","-DENGINESDIR=\"/tmp/openssl/engines-1.1\"","-DNDEBUG"],
+  compiler_flags = [
+    '-fPIC', 
+    '-m64', 
+  ],
+  preprocessor_flags = [ 
+    "-DOPENSSL_USE_NODELETE","-DL_ENDIAN","-DOPENSSL_PIC","-DOPENSSL_CPUID_OBJ","-DOPENSSL_IA32_SSE2","-DOPENSSL_BN_ASM_MONT","-DOPENSSL_BN_ASM_MONT5","-DOPENSSL_BN_ASM_GF2m","-DSHA1_ASM","-DSHA256_ASM","-DSHA512_ASM","-DKECCAK1600_ASM","-DRC4_ASM","-DMD5_ASM","-DAES_ASM","-DVPAES_ASM","-DBSAES_ASM","-DGHASH_ASM","-DECP_NISTZ256_ASM","-DX25519_ASM","-DPADLOCK_ASM","-DPOLY1305_ASM","-DOPENSSLDIR=\"/usr/local/ssl\"","-DENGINESDIR=\"/tmp/openssl/engines-1.1\"","-DNDEBUG"
+  ],
   exported_headers = merge_dicts(subdir_glob([
-    ("include", "**/*.h")
+    ("include", "**/*.h"), 
   ]), {
     'openssl/opensslconf.h': ':gen-include-openssl-opensslconf-h',
   }),
   headers = merge_dicts(subdir_glob([
-    
+    ('test', '**/*.h'), 
   ]), {
     
   }),
-  
-  srcs = 
-  [ (file, []) for file in glob(
-      ["test/testutil/*.c"],
-      excludes=[]
-   )]
-   + [
-    
-  ],
+  srcs = glob([
+    'test/testutil/*.c', 
+  ]),
   linker_flags = ["-Wa,--noexecstack"],
   exported_linker_flags = ["-pthread"],
-  deps = [],
-  visibility = []
 )
 
 cxx_library(
@@ -105,67 +102,99 @@ cxx_library(
     ("crypto/ec/curve448", "**/*.h"),
     ("crypto/ec/curve448/arch_32", "**/*.h"),
     ("crypto/modes", "**/*.h"),
-    # ("", "**/*.h"),
-    # ("", "**/*.c")
   ]), {
     'include/openssl/opensslconf.h': ':gen-include-openssl-opensslconf-h',
-'openssl/opensslconf.h': ':gen-include-openssl-opensslconf-h',
-'crypto/include/internal/bn_conf.h': ':gen-crypto-include-internal-bn_conf-h',
-'include/internal/bn_conf.h': ':gen-crypto-include-internal-bn_conf-h',
-'internal/bn_conf.h': ':gen-crypto-include-internal-bn_conf-h',
-'crypto/buildinf.h': ':gen-crypto-buildinf-h',
-'buildinf.h': ':gen-crypto-buildinf-h',
-'crypto/include/internal/dso_conf.h': ':gen-crypto-include-internal-dso_conf-h',
-'include/internal/dso_conf.h': ':gen-crypto-include-internal-dso_conf-h',
-'internal/dso_conf.h': ':gen-crypto-include-internal-dso_conf-h',
+    'openssl/opensslconf.h': ':gen-include-openssl-opensslconf-h',
+    'crypto/include/internal/bn_conf.h': ':gen-crypto-include-internal-bn_conf-h',
+    'include/internal/bn_conf.h': ':gen-crypto-include-internal-bn_conf-h',
+    'internal/bn_conf.h': ':gen-crypto-include-internal-bn_conf-h',
+    'crypto/buildinf.h': ':gen-crypto-buildinf-h',
+    'buildinf.h': ':gen-crypto-buildinf-h',
+    'crypto/include/internal/dso_conf.h': ':gen-crypto-include-internal-dso_conf-h',
+    'include/internal/dso_conf.h': ':gen-crypto-include-internal-dso_conf-h',
+    'internal/dso_conf.h': ':gen-crypto-include-internal-dso_conf-h',
   }),
-  headers = merge_dicts(subdir_glob([
-    
-  ]), {
-    
-  }),
-  
-  srcs = 
-  [ (file, []) for file in glob(
-      ["crypto/**/*.s","crypto/**/*.c"],
-      excludes=["crypto/aes/aes_cbc.c","crypto/aes/aes_core.c","crypto/aes/aes_x86core.c","crypto/armcap.c","crypto/bn/bn_asm.c","crypto/camellia/camellia.c","crypto/camellia/cmll_cbc.c","crypto/chacha/chacha_enc.c","crypto/des/ncbc_enc.c","crypto/dllmain.c","crypto/ec/ecp_nistz256_table.c","crypto/engine/eng_devcrypto.c","crypto/LPdir_nyi.c","crypto/LPdir_unix.c","crypto/LPdir_vms.c","crypto/LPdir_win.c","crypto/LPdir_win32.c","crypto/LPdir_wince.c","crypto/md2/md2_dgst.c","crypto/md2/md2_one.c","crypto/mem_clr.c","crypto/poly1305/poly1305_base2_44.c","crypto/poly1305/poly1305_ieee754.c","crypto/ppccap.c","crypto/rc4/rc4_enc.c","crypto/rc4/rc4_skey.c","crypto/rc5/rc5_ecb.c","crypto/rc5/rc5_enc.c","crypto/rc5/rc5_skey.c","crypto/rc5/rc5cfb64.c","crypto/rc5/rc5ofb64.c","crypto/s390xcap.c","crypto/sha/keccak1600.c","crypto/sparcv9cap.c","crypto/whrlpool/wp_block.c"]
-   )]
-   + [
+  srcs = glob([
+    'crypto/**/*.s', 
+    'crypto/**/*.c', 
+  ], excludes = [ 
+    'crypto/aes/aes_cbc.c', 
+    'crypto/aes/aes_core.c', 
+    'crypto/aes/aes_x86core.c', 
+    'crypto/armcap.c', 
+    'crypto/bn/bn_asm.c',
+    'crypto/camellia/camellia.c', 
+    'crypto/camellia/cmll_cbc.c', 
+    'crypto/chacha/chacha_enc.c', 
+    'crypto/des/ncbc_enc.c', 
+    "crypto/dllmain.c", 
+    "crypto/ec/ecp_nistz256_table.c", 
+    "crypto/engine/eng_devcrypto.c", 
+    "crypto/LPdir_nyi.c", 
+    "crypto/LPdir_unix.c", 
+    "crypto/LPdir_vms.c", 
+    "crypto/LPdir_win.c", 
+    "crypto/LPdir_win32.c", 
+    "crypto/LPdir_wince.c", 
+    "crypto/md2/md2_dgst.c", 
+    "crypto/md2/md2_one.c", 
+    "crypto/mem_clr.c", 
+    "crypto/poly1305/poly1305_base2_44.c", 
+    "crypto/poly1305/poly1305_ieee754.c", 
+    "crypto/ppccap.c", 
+    "crypto/rc4/rc4_enc.c", 
+    "crypto/rc4/rc4_skey.c", 
+    "crypto/rc5/rc5_ecb.c", 
+    "crypto/rc5/rc5_enc.c", 
+    "crypto/rc5/rc5_skey.c", 
+    "crypto/rc5/rc5cfb64.c", 
+    "crypto/rc5/rc5ofb64.c", 
+    "crypto/s390xcap.c", 
+    "crypto/sha/keccak1600.c", 
+    "crypto/sparcv9cap.c", 
+    "crypto/whrlpool/wp_block.c", 
+  ]) + [
     ':gen-crypto-aes-aes-x86_64-s', 
-':gen-crypto-aes-aesni-mb-x86_64-s', 
-':gen-crypto-aes-aesni-sha1-x86_64-s', 
-':gen-crypto-aes-aesni-sha256-x86_64-s', 
-':gen-crypto-aes-aesni-x86_64-s', 
-':gen-crypto-aes-bsaes-x86_64-s', 
-':gen-crypto-aes-vpaes-x86_64-s', 
-':gen-crypto-bn-rsaz-avx2-s', 
-':gen-crypto-bn-rsaz-x86_64-s', 
-':gen-crypto-bn-x86_64-gf2m-s', 
-':gen-crypto-bn-x86_64-mont-s', 
-':gen-crypto-bn-x86_64-mont5-s', 
-':gen-crypto-camellia-cmll-x86_64-s', 
-':gen-crypto-chacha-chacha-x86_64-s', 
-':gen-crypto-ec-ecp_nistz256-x86_64-s', 
-':gen-crypto-ec-x25519-x86_64-s', 
-':gen-crypto-md5-md5-x86_64-s', 
-':gen-crypto-modes-aesni-gcm-x86_64-s', 
-':gen-crypto-modes-ghash-x86_64-s', 
-':gen-crypto-poly1305-poly1305-x86_64-s', 
-':gen-crypto-rc4-rc4-md5-x86_64-s', 
-':gen-crypto-rc4-rc4-x86_64-s', 
-':gen-crypto-sha-keccak1600-x86_64-s', 
-':gen-crypto-sha-sha1-mb-x86_64-s', 
-':gen-crypto-sha-sha1-x86_64-s', 
-':gen-crypto-sha-sha256-mb-x86_64-s', 
-':gen-crypto-sha-sha256-x86_64-s', 
-':gen-crypto-sha-sha512-x86_64-s', 
-':gen-crypto-whrlpool-wp-x86_64-s', 
-':gen-crypto-x86_64cpuid-s', 
+    ':gen-crypto-aes-aesni-mb-x86_64-s', 
+    ':gen-crypto-aes-aesni-sha1-x86_64-s', 
+    ':gen-crypto-aes-aesni-sha256-x86_64-s', 
+    ':gen-crypto-aes-aesni-x86_64-s', 
+    ':gen-crypto-aes-bsaes-x86_64-s', 
+    ':gen-crypto-aes-vpaes-x86_64-s', 
+    ':gen-crypto-bn-rsaz-avx2-s', 
+    ':gen-crypto-bn-rsaz-x86_64-s', 
+    ':gen-crypto-bn-x86_64-gf2m-s', 
+    ':gen-crypto-bn-x86_64-mont-s', 
+    ':gen-crypto-bn-x86_64-mont5-s', 
+    ':gen-crypto-camellia-cmll-x86_64-s', 
+    ':gen-crypto-chacha-chacha-x86_64-s', 
+    ':gen-crypto-ec-ecp_nistz256-x86_64-s', 
+    ':gen-crypto-ec-x25519-x86_64-s', 
+    ':gen-crypto-md5-md5-x86_64-s', 
+    ':gen-crypto-modes-aesni-gcm-x86_64-s', 
+    ':gen-crypto-modes-ghash-x86_64-s', 
+    ':gen-crypto-poly1305-poly1305-x86_64-s', 
+    ':gen-crypto-rc4-rc4-md5-x86_64-s', 
+    ':gen-crypto-rc4-rc4-x86_64-s', 
+    ':gen-crypto-sha-keccak1600-x86_64-s', 
+    ':gen-crypto-sha-sha1-mb-x86_64-s', 
+    ':gen-crypto-sha-sha1-x86_64-s', 
+    ':gen-crypto-sha-sha256-mb-x86_64-s', 
+    ':gen-crypto-sha-sha256-x86_64-s', 
+    ':gen-crypto-sha-sha512-x86_64-s', 
+    ':gen-crypto-whrlpool-wp-x86_64-s', 
+    ':gen-crypto-x86_64cpuid-s', 
   ],
-  linker_flags = ["-Wl,-znodelete","-Wl,-Bsymbolic","-Wa,--noexecstack"],
-  exported_linker_flags = ["-L.","-pthread","-ldl"],
-  deps = [],
-  visibility = []
+  linker_flags = [
+    "-Wl,-znodelete", 
+    "-Wl,-Bsymbolic", 
+    "-Wa,--noexecstack", 
+  ],
+  exported_linker_flags = [
+    "-pthread", 
+    "-ldl", 
+  ],
+  visibility = [], 
 )
 
 cxx_library(
