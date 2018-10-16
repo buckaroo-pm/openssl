@@ -3,38 +3,63 @@ def merge_dicts(x, y):
   z.update(y)
   return z
 
-
-
 cxx_library(
-  name = "apps",
-  header_namespace= '',
-  compiler_flags = ["-fPIC","-m64"],
-  preprocessor_flags = ["-DOPENSSL_USE_NODELETE","-DL_ENDIAN","-DOPENSSL_PIC","-DOPENSSL_CPUID_OBJ","-DOPENSSL_IA32_SSE2","-DOPENSSL_BN_ASM_MONT","-DOPENSSL_BN_ASM_MONT5","-DOPENSSL_BN_ASM_GF2m","-DSHA1_ASM","-DSHA256_ASM","-DSHA512_ASM","-DKECCAK1600_ASM","-DRC4_ASM","-DMD5_ASM","-DAES_ASM","-DVPAES_ASM","-DBSAES_ASM","-DGHASH_ASM","-DECP_NISTZ256_ASM","-DX25519_ASM","-DPADLOCK_ASM","-DPOLY1305_ASM","-DOPENSSLDIR=\"/usr/local/ssl\"","-DENGINESDIR=\"/tmp/openssl/engines-1.1\"","-DNDEBUG"],
+  name = 'apps',
+  header_namespace = '',
+  compiler_flags = [ 
+    '-fPIC', 
+    '-m64', 
+  ],
+  preprocessor_flags = [ 
+    '-DOPENSSL_USE_NODELETE', 
+    '-DL_ENDIAN', 
+    '-DOPENSSL_PIC', 
+    '-DOPENSSL_CPUID_OBJ', 
+    "-DOPENSSL_IA32_SSE2", 
+    "-DOPENSSL_BN_ASM_MONT", 
+    "-DOPENSSL_BN_ASM_MONT5", 
+    "-DOPENSSL_BN_ASM_GF2m", 
+    "-DSHA1_ASM", 
+    "-DSHA256_ASM", 
+    "-DSHA512_ASM",
+    "-DKECCAK1600_ASM", 
+    "-DRC4_ASM","-DMD5_ASM",
+    "-DAES_ASM","-DVPAES_ASM", 
+    "-DBSAES_ASM", 
+    "-DGHASH_ASM", 
+    "-DECP_NISTZ256_ASM", 
+    "-DX25519_ASM", 
+    "-DPADLOCK_ASM", 
+    '-DPOLY1305_ASM', 
+    '-DOPENSSLDIR="/usr/local/ssl"', 
+    '-DENGINESDIR="/tmp/openssl/engines-1.1"', 
+    '-DNDEBUG', 
+  ],
   exported_headers = merge_dicts(subdir_glob([
-    ("include", "**/*.h"),
-("", "**/*.h")
+    ('include', '**/*.h'), 
+    ('', 'e_os.h'), 
   ]), {
     'include/openssl/opensslconf.h': ':gen-include-openssl-opensslconf-h',
-'openssl/opensslconf.h': ':gen-include-openssl-opensslconf-h',
+    'openssl/opensslconf.h': ':gen-include-openssl-opensslconf-h',
   }),
-  headers = merge_dicts(subdir_glob([
-    
-  ]), {
-    
-  }),
-  
-  srcs = 
-  [ (file, []) for file in glob(
-      ["apps/app_rand.c","apps/apps.c","apps/bf_prefix.c","apps/opt.c","apps/s_cb.c","apps/s_socket.c"],
-      excludes=[]
-   )]
-   + [
-    
+  headers = subdir_glob([
+    ('', 'apps/**/*.h'), 
+  ]),
+  srcs = [
+    'apps/app_rand.c', 
+    'apps/apps.c', 
+    'apps/bf_prefix.c', 
+    'apps/opt.c', 
+    'apps/s_cb.c', 
+    'apps/s_socket.c', 
   ],
-  linker_flags = ["-Wa,--noexecstack"],
-  exported_linker_flags = ["-pthread"],
-  deps = [],
-  visibility = []
+  linker_flags = [
+    '-Wa,--noexecstack', 
+  ],
+  exported_linker_flags = [
+    '-pthread'
+  ], 
+  visibility = [], 
 )
 
 cxx_library(
@@ -74,14 +99,14 @@ cxx_library(
   preprocessor_flags = ["-DOPENSSL_USE_NODELETE","-DL_ENDIAN","-DOPENSSL_PIC","-DOPENSSL_CPUID_OBJ","-DOPENSSL_IA32_SSE2","-DOPENSSL_BN_ASM_MONT","-DOPENSSL_BN_ASM_MONT5","-DOPENSSL_BN_ASM_GF2m","-DSHA1_ASM","-DSHA256_ASM","-DSHA512_ASM","-DKECCAK1600_ASM","-DRC4_ASM","-DMD5_ASM","-DAES_ASM","-DVPAES_ASM","-DBSAES_ASM","-DGHASH_ASM","-DECP_NISTZ256_ASM","-DX25519_ASM","-DPADLOCK_ASM","-DPOLY1305_ASM","-DOPENSSLDIR=\"/usr/local/ssl\"","-DENGINESDIR=\"/tmp/openssl/engines-1.1\"","-DNDEBUG"],
   exported_headers = merge_dicts(subdir_glob([
     ("crypto", "**/*.h"),
-("crypto", "**/*.c"),
-("include", "**/*.h"),
-("crypto/include", "**/*.h"),
-("crypto/ec/curve448", "**/*.h"),
-("crypto/ec/curve448/arch_32", "**/*.h"),
-("crypto/modes", "**/*.h"),
-("", "**/*.h"),
-("", "**/*.c")
+    ("crypto", "**/*.c"),
+    ("include", "**/*.h"),
+    ("crypto/include", "**/*.h"),
+    ("crypto/ec/curve448", "**/*.h"),
+    ("crypto/ec/curve448/arch_32", "**/*.h"),
+    ("crypto/modes", "**/*.h"),
+    # ("", "**/*.h"),
+    # ("", "**/*.c")
   ]), {
     'include/openssl/opensslconf.h': ':gen-include-openssl-opensslconf-h',
 'openssl/opensslconf.h': ':gen-include-openssl-opensslconf-h',
