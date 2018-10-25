@@ -1,3 +1,9 @@
+# Buck
+/.buckd
+/buck-out
+BUCKAROO_DEPS
+.buckconfig.local
+
 # Ignore editor artefacts
 /.dir-locals.el
 

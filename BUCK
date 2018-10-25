@@ -2,6 +2,20 @@ from os.path import basename
 from hashlib import sha256
 import re
 
+genrule(
+  name = 'opensslconf-h', 
+  out = 'opensslconf.h', 
+  srcs = glob([
+    "./*.pm", 
+    "util/*.pl", 
+    "util/perl/*.pm", 
+    "external/perl/transfer/Text/*.pm", 
+    "external/perl/Text-Template-1.46/lib/Text/*.pm", 
+    "include/openssl/*.in", 
+  ]), 
+  cmd = 'perl "-I." -Mconfigdata "util/dofile.pl" "-oMakefile" include/openssl/opensslconf.h.in > $OUT', 
+)
+
 def clean(x):
   return re.sub(r'[:_+\.\/\\]', '-', x.lower()).replace('--', '-')
 
