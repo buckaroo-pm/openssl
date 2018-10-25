@@ -29,8 +29,6 @@ matrix:
             - ubuntu-toolchain-r-test
       compiler: gcc-6
   exclude:
-    - os: linux
-      compiler: clang
     - os: osx
       compiler: gcc
 
@@ -43,5 +41,5 @@ before_install:
   - buckaroo version
 
 script:
-  - buck build :crypto
-  - buck build :ssl
+  - buck build --config ui.superconsole=DISABLED :crypto
+  - buck build --config ui.superconsole=DISABLED :ssl
