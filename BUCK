@@ -47,7 +47,8 @@ tools = glob([
   'util/**/*.pl',
 ])
 
-xcode_developer_dir = read_config('apple', 'xcode_developer_dir', '/Applications/Xcode.app/Contents/Developer')
+xcode_developer_dir = read_config('apple', 'xcode_developer_dir', '$DEVELOPER_DIR')
+android_ndk = read_config('ndk', 'ndk_path', '$ANDROID_NDK')
 
 def configure(platform): 
   name = clean('configure-' + platform)
@@ -57,6 +58,7 @@ def configure(platform):
     srcs = build_srcs, 
     cmd = ' && '.join([
       'DEVELOPER_DIR="' + xcode_developer_dir + '"', 
+      'ANDROID_NDK="' + android_ndk + '"', 
       'cp -r $SRCDIR/. $TMP', 
       'mkdir -p $OUT', 
       'cd $TMP', 
@@ -76,11 +78,12 @@ def make(platform):
     srcs = build_srcs, 
     cmd = ' && '.join([
       'DEVELOPER_DIR="' + xcode_developer_dir + '"', 
+      'ANDROID_NDK="' + android_ndk + '"', 
       'cp -r $SRCDIR/. $TMP', 
       'mkdir -p $OUT', 
       'cd $TMP', 
       'chmod +x ' + ' '.join([ '$TMP/' + x for x in tools ]), 
-      './Configure shared --prefix=$OUT/build --openssldir=$OUT/build/openssl ' + platform, 
+      './Configure shared --prefix=$OUT --openssldir=$OUT/openssl ' + platform, 
       'make -j4', 
       'make install', 
     ])
@@ -92,27 +95,22 @@ macos_make = make('darwin64-x86_64-cc')
 windows_make = make('VC-WIN64I')
 iphoneos_make = make('ios64-xcrun')
 iphonesimulator_make = make('iossimulator-xcrun')
-
-linux_configure = configure('linux-x86_64')
-macos_configure = configure('darwin64-x86_64-cc')
-windows_configure = configure('VC-WIN64I')
-iphoneos_configure = configure('ios64-xcrun')
-iphonesimulator_configure = configure('iossimulator-xcrun')
+android_make = make('android-x86_64')
 
 prebuilt_cxx_library(
   name = 'crypto',
   header_namespace = 'openssl',
   platform_shared_lib = [
-    ('macos.*', extract(macos_make, 'build/lib/libcrypto.dylib')), 
-    ('linux.*', extract(linux_make, 'build/lib/libcrypto.so')), 
-    ('iphoneos.*', extract(iphoneos_make, 'build/lib/libcrypto.dylib')), 
-    ('iphonesimulator.*', extract(iphonesimulator_make, 'build/lib/libcrypto.dylib')), 
+    ('macos.*', extract(macos_make, 'lib/libcrypto.dylib')), 
+    ('linux.*', extract(linux_make, 'lib/libcrypto.so')), 
+    ('iphoneos.*', extract(iphoneos_make, 'lib/libcrypto.dylib')), 
+    ('iphonesimulator.*', extract(iphonesimulator_make, 'lib/libcrypto.dylib')), 
   ], 
   platform_static_lib = [
-    ('macos.*', extract(macos_make, 'build/lib/libcrypto.a')), 
-    ('linux.*', extract(linux_make, 'build/lib/libcrypto.a')), 
-    ('iphoneos.*', extract(iphoneos_make, 'build/lib/libcrypto.a')), 
-    ('iphonesimulator.*', extract(iphonesimulator_make, 'build/lib/libcrypto.a')), 
+    ('macos.*', extract(macos_make, 'lib/libcrypto.a')), 
+    ('linux.*', extract(linux_make, 'lib/libcrypto.a')), 
+    ('iphoneos.*', extract(iphoneos_make, 'lib/libcrypto.a')), 
+    ('iphonesimulator.*', extract(iphonesimulator_make, 'lib/libcrypto.a')), 
   ], 
 )
 
@@ -120,36 +118,49 @@ prebuilt_cxx_library(
   name = 'ssl',
   header_namespace = 'openssl',
   platform_shared_lib = [
-    ('macos.*', extract(macos_make, 'build/lib/libssl.dylib')), 
-    ('linux.*', extract(linux_make, 'build/lib/libssl.so')), 
-    ('iphoneos.*', extract(iphoneos_make, 'build/lib/libssl.dylib')), 
-    ('iphonesimulator.*', extract(iphonesimulator_make, 'build/lib/libssl.dylib')), 
+    ('macos.*', extract(macos_make, 'lib/libssl.dylib')), 
+    ('linux.*', extract(linux_make, 'lib/libssl.so')), 
+    ('iphoneos.*', extract(iphoneos_make, 'lib/libssl.dylib')), 
+    ('iphonesimulator.*', extract(iphonesimulator_make, 'lib/libssl.dylib')), 
   ], 
   platform_static_lib = [
-    ('macos.*', extract(macos_make, 'build/lib/libssl.a')), 
-    ('linux.*', extract(linux_make, 'build/lib/libssl.a')), 
-    ('iphoneos.*', extract(iphoneos_make, 'build/lib/libssl.a')), 
-    ('iphonesimulator.*', extract(iphonesimulator_make, 'build/lib/libssl.a')), 
+    ('macos.*', extract(macos_make, 'lib/libssl.a')), 
+    ('linux.*', extract(linux_make, 'lib/libssl.a')), 
+    ('iphoneos.*', extract(iphoneos_make, 'lib/libssl.a')), 
+    ('iphonesimulator.*', extract(iphonesimulator_make, 'lib/libssl.a')), 
   ], 
 )
 
-prebuilt_cxx_library(
+def platform_headers(configure):
+  name = clean('openssl-headers-' + configure)
+  prebuilt_cxx_library(
+    name = name,
+    header_only = True,
+    header_namespace = 'openssl',
+    exported_headers = { 
+      'opensslconf.h': extract(configure, 'include/openssl/opensslconf.h'), 
+    }, 
+  )
+  return ':' + name
+
+cxx_library(
   name = 'openssl',
-  header_only = True,
   header_namespace = 'openssl',
   exported_headers = subdir_glob([
     ('include/openssl', '**/*.h'), 
   ]), 
-  exported_platform_headers = [
-    ('^macos.*', { 'opensslconf.h': extract(macos_configure, 'include/openssl/opensslconf.h') }),
-    ('^linux.*', { 'opensslconf.h': extract(linux_configure, 'include/openssl/opensslconf.h') }),
-    ('^iphoneos.*', { 'opensslconf.h': extract(iphoneos_configure, 'include/openssl/opensslconf.h') }),
-    ('^iphonesimulator.*', { 'opensslconf.h': extract(iphonesimulator_configure, 'include/openssl/opensslconf.h') }),
-  ], 
   exported_deps = [
-    ':crypto',
-    ':ssl',
-  ],
+    ':crypto', 
+    ':ssl', 
+  ], 
+  platform_deps = [
+    ('macos.*', [ platform_headers(macos_make) ]), 
+    ('linux.*', [ platform_headers(linux_make) ]), 
+    ('windows.*', [ platform_headers(windows_make) ]), 
+    ('iphoneos.*', [ platform_headers(iphoneos_make) ]), 
+    ('iphonesimulator.*', [ platform_headers(iphonesimulator_make) ]), 
+    ('android.*', [ platform_headers(android_make) ]), 
+  ], 
   visibility = [
     'PUBLIC',
   ],
