@@ -2,20 +2,6 @@ from os.path import basename
 from hashlib import sha256
 import re
 
-genrule(
-  name = 'opensslconf-h', 
-  out = 'opensslconf.h', 
-  srcs = glob([
-    "./*.pm", 
-    "util/*.pl", 
-    "util/perl/*.pm", 
-    "external/perl/transfer/Text/*.pm", 
-    "external/perl/Text-Template-1.46/lib/Text/*.pm", 
-    "include/openssl/*.in", 
-  ]), 
-  cmd = 'perl "-I." -Mconfigdata "util/dofile.pl" "-oMakefile" include/openssl/opensslconf.h.in > $OUT', 
-)
-
 def clean(x):
   return re.sub(r'[:_+\.\/\\]', '-', x.lower()).replace('--', '-')
 
@@ -61,6 +47,8 @@ tools = glob([
   'util/**/*.pl',
 ])
 
+xcode_developer_dir = read_config('apple', 'xcode_developer_dir', '/Applications/Xcode.app/Contents/Developer')
+
 def configure(platform): 
   name = clean('configure-' + platform)
   genrule(
@@ -68,9 +56,9 @@ def configure(platform):
     out = 'out',
     srcs = build_srcs, 
     cmd = ' && '.join([
+      'DEVELOPER_DIR="' + xcode_developer_dir + '"', 
       'cp -r $SRCDIR/. $TMP', 
       'mkdir -p $OUT', 
-      'printenv > $OUT/env', 
       'cd $TMP', 
       'chmod +x ' + ' '.join([ '$TMP/' + x for x in tools ]), 
       './Configure shared --prefix=$OUT/build --openssldir=$OUT/build/openssl ' + platform, 
@@ -87,6 +75,7 @@ def make(platform):
     out = 'out',
     srcs = build_srcs, 
     cmd = ' && '.join([
+      'DEVELOPER_DIR="' + xcode_developer_dir + '"', 
       'cp -r $SRCDIR/. $TMP', 
       'mkdir -p $OUT', 
       'cd $TMP', 
@@ -97,8 +86,6 @@ def make(platform):
     ])
   )
   return ':' + name
-
-xcode_developer_dir = read_config('apple', 'xcode_developer_dir', '/Applications/Xcode.app/Contents/Developer')
 
 linux_make = make('linux-x86_64')
 macos_make = make('darwin64-x86_64-cc')
