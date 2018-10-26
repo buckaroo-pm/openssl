@@ -1,9 +1,51 @@
 from os.path import basename
+from os.path import splitext
+from os.path import dirname
 from hashlib import sha256
 import re
 
 def clean(x):
   return re.sub(r'[:_+\.\/\\]', '-', x.lower()).replace('--', '-')
+
+xcode_developer_dir = read_config('apple', 'xcode_developer_dir', '/Applications/Xcode.app/Contents/Developer')
+
+in_files = glob([
+  'include/**/*.in', 
+  'crypto/**/*.in', 
+])
+
+def conf(platform): 
+  name = clean('conf-' + platform)
+  genrule(
+    name = name, 
+    out = 'out', 
+    srcs = in_files + glob([
+      '*.pm', 
+      '*.info', 
+      'Configure', 
+      'Configurations/**/*.conf', 
+      'Configurations/**/*.tmpl', 
+      'Configurations/**/*.pl', 
+      'Configurations/**/*.pm', 
+      'include/openssl/opensslv.h', 
+      'util/**/*.pl', 
+      'util/**/*.pm', 
+      'external/perl/transfer/Text/*.pm', 
+      'external/perl/Text-Template-1.46/lib/Text/*.pm', 
+    ]), 
+    cmd = ' && '.join([
+      'DEVELOPER_DIR="' + xcode_developer_dir + '"', # Set XCode developer directory
+      'mkdir -p $OUT', 
+      'cp -r $SRCDIR/. $TMP', 
+      'cd $TMP', 
+      './Configure ' + platform, 
+    ] + [ 
+      'perl "-I." -Mconfigdata "util/dofile.pl" "-oMakefile" ' + x + ' > ' + splitext(x)[0] for x in in_files 
+    ] + [ 
+      'mkdir -p $OUT/' + dirname(x) + ' && cp $TMP/' + splitext(x)[0] + ' $OUT/' + splitext(x)[0] for x in in_files 
+    ]), 
+  )
+  return ':' + name
 
 def extract(rule, path):
   name = clean('extract-' + rule + '-' + path)
@@ -47,8 +89,6 @@ tools = glob([
   'util/**/*.pl',
 ])
 
-xcode_developer_dir = read_config('apple', 'xcode_developer_dir', '/Applications/Xcode.app/Contents/Developer')
-
 def configure(platform): 
   name = clean('configure-' + platform)
   genrule(
@@ -86,6 +126,114 @@ def make(platform):
     ])
   )
   return ':' + name
+
+# linux_opensslconf = opensslconf('linux-x86_64')
+macos_conf = conf('darwin64-x86_64-cc')
+# windows_opensslconf = opensslconf('VC-WIN64I')
+# iphoneos_opensslconf = opensslconf('ios64-xcrun')
+# iphonesimulator_opensslconf = opensslconf('iossimulator-xcrun')
+
+crypto_folders = [
+  'aes', 
+  'aria', 
+  'asn1', 
+  'async', 
+  'bf', 
+  'bio', 
+  'blake2', 
+  'bn', 
+  'buffer', 
+  'camellia', 
+  'cast', 
+  'chacha', 
+  'cmac', 
+  'cms', 
+  'comp', 
+  'conf', 
+  'ct', 
+  'des', 
+  'dh', 
+  'dsa', 
+  'dso', 
+  'ec', 
+  'engine', 
+  'err', 
+  'evp', 
+  'hmac', 
+  'idea', 
+  'include', 
+  'kdf', 
+  'lhash', 
+  'md2', 
+  'md4', 
+  'md5', 
+  'mdc2', 
+  'modes', 
+  'objects', 
+  'ocsp', 
+  'pem', 
+  'perlasm', 
+  'pkcs12', 
+  'pkcs7', 
+  'poly1305', 
+  'rand', 
+  'rc2', 
+  'rc4', 
+  'rc5', 
+  'ripemd', 
+  'rsa', 
+  'seed', 
+  'sha', 
+  'siphash', 
+  'sm2', 
+  'sm3', 
+  'sm4', 
+  'srp', 
+  'stack', 
+  'store', 
+  'ts', 
+  'txt_db', 
+  'ui', 
+  'whrlpool', 
+  'x509', 
+  'x509v3', 
+]
+
+gen_headers_macos = glob([
+  'openssl/**/*.in', 
+])
+
+cxx_library(
+  name = 'crypto2', 
+  header_namespace = '', 
+  exported_headers = subdir_glob([
+    ('include', '**/*.h'), 
+    ('crypto/include', '**/*.h'), 
+  ]), 
+  exported_platform_headers = [
+    (
+      'macos.*', 
+      { 
+        'openssl/opensslconf.h': extract(macos_conf, 'include/openssl/opensslconf.h'), 
+        'internal/bn_conf.h': extract(macos_conf, 'crypto/include/internal/bn_conf.h'), 
+        'internal/dso_conf.h': extract(macos_conf, 'crypto/include/internal/dso_conf.h'), 
+      }
+    ), 
+  ], 
+  headers = subdir_glob(
+    [ (x + '/include', '**/*.h') for x in crypto_folders ], 
+  ), 
+  srcs = glob([
+    'crypto/**/*.c', 
+  ], excludes = glob([
+    'crypto/**/*_unix.c', 
+    'crypto/**/*_win.c', 
+  ])), 
+  platform_srcs = [
+    ('linux.*', glob([ 'crypto/**/*_unix.c' ])), 
+    ('windows.*', glob([ 'crypto/**/*_win.c' ])), 
+  ], 
+)
 
 linux_make = make('linux-x86_64')
 macos_make = make('darwin64-x86_64-cc')
