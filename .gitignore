@@ -1,3 +1,6 @@
+/buck-out/
+/.buckd/
+
 # Ignore editor artefacts
 /.dir-locals.el
 

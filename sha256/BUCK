@@ -1,0 +1,9 @@
+cxx_binary(
+  name = 'sha256', 
+  srcs = [
+    'sha256.cpp', 
+  ], 
+  deps = [
+    '//:openssl', 
+  ], 
+)
