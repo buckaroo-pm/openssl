@@ -4,48 +4,10 @@ from os.path import dirname
 from hashlib import sha256
 import re
 
-def clean(x):
-  return re.sub(r'[:_+\.\/\\]', '-', x.lower()).replace('--', '-')
-
-xcode_developer_dir = read_config('apple', 'xcode_developer_dir', '/Applications/Xcode.app/Contents/Developer')
-
-in_files = glob([
-  'include/**/*.in', 
-  'crypto/**/*.in', 
-])
-
-def conf(platform): 
-  name = clean('conf-' + platform)
-  genrule(
-    name = name, 
-    out = 'out', 
-    srcs = in_files + glob([
-      '*.pm', 
-      '*.info', 
-      'Configure', 
-      'Configurations/**/*.conf', 
-      'Configurations/**/*.tmpl', 
-      'Configurations/**/*.pl', 
-      'Configurations/**/*.pm', 
-      'include/openssl/opensslv.h', 
-      'util/**/*.pl', 
-      'util/**/*.pm', 
-      'external/perl/transfer/Text/*.pm', 
-      'external/perl/Text-Template-1.46/lib/Text/*.pm', 
-    ]), 
-    cmd = ' && '.join([
-      'DEVELOPER_DIR="' + xcode_developer_dir + '"', # Set XCode developer directory
-      'mkdir -p $OUT', 
-      'cp -r $SRCDIR/. $TMP', 
-      'cd $TMP', 
-      './Configure ' + platform, 
-    ] + [ 
-      'perl "-I." -Mconfigdata "util/dofile.pl" "-oMakefile" ' + x + ' > ' + splitext(x)[0] for x in in_files 
-    ] + [ 
-      'mkdir -p $OUT/' + dirname(x) + ' && cp $TMP/' + splitext(x)[0] + ' $OUT/' + splitext(x)[0] for x in in_files 
-    ]), 
-  )
-  return ':' + name
+def merge_dicts(x, y):
+  z = x.copy()
+  z.update(y)
+  return z
 
 def extract(rule, path):
   name = clean('extract-' + rule + '-' + path)
@@ -56,249 +18,209 @@ def extract(rule, path):
   )
   return ':' + name
 
-build_srcs = glob([
-  'apps/**/*',
-  'Configurations/**/*',
-  'crypto/**/*',
-  'demos/**/*',
-  'doc/**/*',
-  'engines/**/*',
-  'external/**/*',
-  'fuzz/**/*',
-  'include/**/*',
-  'krb5/**/*',
-  'ms/**/*',
-  'os-dep/**/*',
-  'pyca-cryptography/**/*',
-  'ssl/**/*',
-  'test/**/*',
-  'tools/**/*',
-  'util/**/*',
-  'VMS/**/*',
-  'LICENSE', 
-  'Configure', 
-  'config', 
-  '*.h', 
-  '*.info', 
-])
+def clean(x):
+  return re.sub(r'[:_+\.\/\\]', '-', x.lower()).replace('--', '-')
 
-tools = glob([
-  'Configure',
-  'util/pod2mantest',
-  'util/**/*.sh',
-  'util/**/*.pl',
+openssl_dir = read_config('openssl', 'openssl_dir', '/usr/local/ssl')
+engines_dir = read_config('openssl', 'engines_dir', '/usr/local/lib/engines-1.1')
+
+xcode_developer_dir = read_config('apple', 'xcode_developer_dir', '/Applications/Xcode.app/Contents/Developer')
+
+in_files = glob([
+  'include/**/*.in', 
+  'crypto/**/*.in', 
+  'tools/**/*.in', 
 ])
 
 def configure(platform): 
   name = clean('configure-' + platform)
   genrule(
-    name = name,
-    out = 'out',
-    srcs = build_srcs, 
+    name = name, 
+    out = 'out', 
+    srcs = in_files + glob([
+      '*.h', 
+      '*.pm', 
+      '*.info', 
+      'Configure', 
+      'apps/**/*.info', 
+      'crypto/**/*.info', 
+      'Configurations/**/*.conf', 
+      'Configurations/**/*.tmpl', 
+      'Configurations/**/*.pl', 
+      'Configurations/**/*.pm', 
+      'engines/**/*.pl', 
+      'engines/**/*.info', 
+      'fuzz/**/*.info', 
+      'include/**/*.info', 
+      'include/openssl/opensslv.h', 
+      'util/**/*.pl', 
+      'util/**/*.pm', 
+      'ssl/**/*.info', 
+      'external/**/*.pm', 
+      'tools/**/*.info', 
+    ]), 
     cmd = ' && '.join([
-      'DEVELOPER_DIR="' + xcode_developer_dir + '"', 
-      'cp -r $SRCDIR/. $TMP', 
+      'DEVELOPER_DIR="' + xcode_developer_dir + '"', # Set XCode developer directory
       'mkdir -p $OUT', 
+      'cp -r $SRCDIR/. $TMP', 
       'cd $TMP', 
-      'chmod +x ' + ' '.join([ '$TMP/' + x for x in tools ]), 
-      './Configure shared --prefix=$OUT/build --openssldir=$OUT/build/openssl ' + platform, 
-      'make include/openssl/opensslconf.h', 
-      'cp -r $TMP/. $OUT', 
-    ])
+      './Configure shared ' + platform, 
+    ] + [ 
+      'perl "-I." -Mconfigdata "util/dofile.pl" "-oMakefile" ' + x + ' > ' + splitext(x)[0] for x in in_files 
+    ] + [ 
+      'mkdir -p $OUT/' + dirname(x) + ' && cp $TMP/' + splitext(x)[0] + ' $OUT/' + splitext(x)[0] for x in in_files 
+    ] + [
+      'perl util/mkbuildinf.pl "compiler: gcc" "' + platform + '" > crypto/buildinf.h', 
+      'cp $TMP/crypto/buildinf.h $OUT/crypto/buildinf.h', 
+    ]), 
   )
   return ':' + name
 
-def make(platform): 
-  name = clean('make-' + platform)
-  genrule(
-    name = name,
-    out = 'out',
-    srcs = build_srcs, 
-    cmd = ' && '.join([
-      'DEVELOPER_DIR="' + xcode_developer_dir + '"', 
-      'cp -r $SRCDIR/. $TMP', 
-      'mkdir -p $OUT', 
-      'cd $TMP', 
-      'chmod +x ' + ' '.join([ '$TMP/' + x for x in tools ]), 
-      './Configure shared --prefix=$OUT/build --openssldir=$OUT/build/openssl ' + platform, 
-      'make -j4', 
-      'make install', 
-    ])
+configure_linux = configure('linux-x86_64')
+
+def opensslconf(configure):
+  name = clean('opensslconf-' + configure)
+  prebuilt_cxx_library(
+    name = name, 
+    header_namespace = '', 
+    header_only = True, 
+    exported_headers = {
+      'openssl/opensslconf.h': extract(configure, 'include/openssl/opensslconf.h'),
+    }
   )
   return ':' + name
 
-# linux_opensslconf = opensslconf('linux-x86_64')
-macos_conf = conf('darwin64-x86_64-cc')
-# windows_opensslconf = opensslconf('VC-WIN64I')
-# iphoneos_opensslconf = opensslconf('ios64-xcrun')
-# iphonesimulator_opensslconf = opensslconf('iossimulator-xcrun')
-
-crypto_folders = [
-  'aes', 
-  'aria', 
-  'asn1', 
-  'async', 
-  'bf', 
-  'bio', 
-  'blake2', 
-  'bn', 
-  'buffer', 
-  'camellia', 
-  'cast', 
-  'chacha', 
-  'cmac', 
-  'cms', 
-  'comp', 
-  'conf', 
-  'ct', 
-  'des', 
-  'dh', 
-  'dsa', 
-  'dso', 
-  'ec', 
-  'engine', 
-  'err', 
-  'evp', 
-  'hmac', 
-  'idea', 
-  'include', 
-  'kdf', 
-  'lhash', 
-  'md2', 
-  'md4', 
-  'md5', 
-  'mdc2', 
-  'modes', 
-  'objects', 
-  'ocsp', 
-  'pem', 
-  'perlasm', 
-  'pkcs12', 
-  'pkcs7', 
-  'poly1305', 
-  'rand', 
-  'rc2', 
-  'rc4', 
-  'rc5', 
-  'ripemd', 
-  'rsa', 
-  'seed', 
-  'sha', 
-  'siphash', 
-  'sm2', 
-  'sm3', 
-  'sm4', 
-  'srp', 
-  'stack', 
-  'store', 
-  'ts', 
-  'txt_db', 
-  'ui', 
-  'whrlpool', 
-  'x509', 
-  'x509v3', 
-]
-
-gen_headers_macos = glob([
-  'openssl/**/*.in', 
-])
+def crypto_headers(configure):
+  return {
+    'crypto/buildinf.h': extract(configure, 'crypto/buildinf.h'), 
+    'crypto/include/internal/bn_conf.h': extract(configure, 'crypto/include/internal/bn_conf.h'), 
+    'crypto/include/internal/dso_conf.h': extract(configure, 'crypto/include/internal/dso_conf.h'), 
+  }
 
 cxx_library(
-  name = 'crypto2', 
-  header_namespace = '', 
-  exported_headers = subdir_glob([
-    ('include', '**/*.h'), 
-    ('crypto/include', '**/*.h'), 
-  ]), 
-  exported_platform_headers = [
-    (
-      'macos.*', 
-      { 
-        'openssl/opensslconf.h': extract(macos_conf, 'include/openssl/opensslconf.h'), 
-        'internal/bn_conf.h': extract(macos_conf, 'crypto/include/internal/bn_conf.h'), 
-        'internal/dso_conf.h': extract(macos_conf, 'crypto/include/internal/dso_conf.h'), 
-      }
-    ), 
-  ], 
-  headers = subdir_glob(
-    [ (x + '/include', '**/*.h') for x in crypto_folders ], 
-  ), 
-  srcs = glob([
-    'crypto/**/*.c', 
-  ], excludes = glob([
-    'crypto/**/*_unix.c', 
-    'crypto/**/*_win.c', 
-  ])), 
-  platform_srcs = [
-    ('linux.*', glob([ 'crypto/**/*_unix.c' ])), 
-    ('windows.*', glob([ 'crypto/**/*_win.c' ])), 
-  ], 
-)
-
-linux_make = make('linux-x86_64')
-macos_make = make('darwin64-x86_64-cc')
-windows_make = make('VC-WIN64I')
-iphoneos_make = make('ios64-xcrun')
-iphonesimulator_make = make('iossimulator-xcrun')
-
-linux_configure = configure('linux-x86_64')
-macos_configure = configure('darwin64-x86_64-cc')
-windows_configure = configure('VC-WIN64I')
-iphoneos_configure = configure('ios64-xcrun')
-iphonesimulator_configure = configure('iossimulator-xcrun')
-
-prebuilt_cxx_library(
   name = 'crypto',
-  header_namespace = 'openssl',
-  platform_shared_lib = [
-    ('macos.*', extract(macos_make, 'build/lib/libcrypto.dylib')), 
-    ('linux.*', extract(linux_make, 'build/lib/libcrypto.so')), 
-    ('iphoneos.*', extract(iphoneos_make, 'build/lib/libcrypto.dylib')), 
-    ('iphonesimulator.*', extract(iphonesimulator_make, 'build/lib/libcrypto.dylib')), 
+  header_namespace = '',
+  compiler_flags = [
+    "-fPIC", 
+    "-m64", 
+  ],
+  preprocessor_flags = [
+    "-DNDEBUG", 
+    "-DOPENSSL_USE_NODELETE", 
+    "-DL_ENDIAN", 
+    "-DOPENSSL_PIC",
+    '-DOPENSSLDIR="' + openssl_dir + '"',
+    '-DENGINESDIR="' + engines_dir + '"',
+  ],
+  platform_headers = [
+    ('^linux.*', crypto_headers(configure_linux))
   ], 
-  platform_static_lib = [
-    ('macos.*', extract(macos_make, 'build/lib/libcrypto.a')), 
-    ('linux.*', extract(linux_make, 'build/lib/libcrypto.a')), 
-    ('iphoneos.*', extract(iphoneos_make, 'build/lib/libcrypto.a')), 
-    ('iphonesimulator.*', extract(iphonesimulator_make, 'build/lib/libcrypto.a')), 
-  ], 
-)
-
-prebuilt_cxx_library(
-  name = 'ssl',
-  header_namespace = 'openssl',
-  platform_shared_lib = [
-    ('macos.*', extract(macos_make, 'build/lib/libssl.dylib')), 
-    ('linux.*', extract(linux_make, 'build/lib/libssl.so')), 
-    ('iphoneos.*', extract(iphoneos_make, 'build/lib/libssl.dylib')), 
-    ('iphonesimulator.*', extract(iphonesimulator_make, 'build/lib/libssl.dylib')), 
-  ], 
-  platform_static_lib = [
-    ('macos.*', extract(macos_make, 'build/lib/libssl.a')), 
-    ('linux.*', extract(linux_make, 'build/lib/libssl.a')), 
-    ('iphoneos.*', extract(iphoneos_make, 'build/lib/libssl.a')), 
-    ('iphonesimulator.*', extract(iphonesimulator_make, 'build/lib/libssl.a')), 
-  ], 
-)
-
-prebuilt_cxx_library(
-  name = 'openssl',
-  header_only = True,
-  header_namespace = 'openssl',
-  exported_headers = subdir_glob([
-    ('include/openssl', '**/*.h'), 
+  headers = subdir_glob([
+    ("", "*.h"),
+    ("include", "**/*.h"),
+    ("include/internal", "**/*.h"),
+    ("crypto/include", "**/*.h"),
+    ("crypto", "**/*.h"),
+    ("crypto", "**/*.c"),
+    ("crypto/ec/curve448/arch_32", "**/*.h"),
+    ("crypto/ec/curve448", "**/*.h"),
+    ("crypto/modes", "**/*.h"),
   ]), 
-  exported_platform_headers = [
-    ('^macos.*', { 'opensslconf.h': extract(macos_configure, 'include/openssl/opensslconf.h') }),
-    ('^linux.*', { 'opensslconf.h': extract(linux_configure, 'include/openssl/opensslconf.h') }),
-    ('^iphoneos.*', { 'opensslconf.h': extract(iphoneos_configure, 'include/openssl/opensslconf.h') }),
-    ('^iphonesimulator.*', { 'opensslconf.h': extract(iphonesimulator_configure, 'include/openssl/opensslconf.h') }),
+  srcs = glob([
+    "crypto/**/*.c", 
+  ], excludes = [
+    "crypto/aes/aes_x86core.c", 
+    "crypto/armcap.c","crypto/bn/asm/x86_64-gcc.c","crypto/bn/rsaz_exp.c", 
+    "crypto/des/ncbc_enc.c","crypto/dllmain.c","crypto/ec/ecp_nistz256_table.c", 
+    "crypto/ec/ecp_nistz256.c","crypto/engine/eng_devcrypto.c","crypto/LPdir_nyi.c", 
+    "crypto/LPdir_unix.c","crypto/LPdir_vms.c","crypto/LPdir_win.c", 
+    "crypto/LPdir_win32.c","crypto/LPdir_wince.c","crypto/md2/md2_dgst.c", 
+    "crypto/md2/md2_one.c","crypto/poly1305/poly1305_base2_44.c", 
+    "crypto/poly1305/poly1305_ieee754.c","crypto/ppccap.c","crypto/rc5/rc5_ecb.c", 
+    "crypto/rc5/rc5_enc.c","crypto/rc5/rc5_skey.c","crypto/rc5/rc5cfb64.c", 
+    "crypto/rc5/rc5ofb64.c","crypto/s390xcap.c","crypto/sparcv9cap.c"
+  ]),
+  linker_flags = [
+    "-Wl,-znodelete", 
+    "-Wl,-Bsymbolic", 
+  ],
+  exported_linker_flags = [
+    "-pthread", 
+    "-ldl", 
+  ],
+  platform_deps = [
+    # ('linux.*', [ generated_headers_linux ]), 
   ], 
-  exported_deps = [
-    ':crypto',
-    ':ssl',
+  visibility = [
+    'PUBLIC', 
+  ], 
+)
+
+linux_preprocessor_flags = [
+  "-DOPENSSL_USE_NODELETE",
+  "-DL_ENDIAN","-DOPENSSL_PIC",
+  "-DOPENSSL_CPUID_OBJ",
+  "-DOPENSSL_IA32_SSE2","-DOPENSSL_BN_ASM_MONT",
+  "-DOPENSSL_BN_ASM_MONT5","-DOPENSSL_BN_ASM_GF2m",
+  "-DSHA1_ASM","-DSHA256_ASM",
+  "-DSHA512_ASM","-DKECCAK1600_ASM","-DRC4_ASM","-DMD5_ASM",
+  "-DAES_ASM",
+  "-DVPAES_ASM","-DBSAES_ASM","-DGHASH_ASM",
+  "-DECP_NISTZ256_ASM","-DX25519_ASM",
+  "-DPADLOCK_ASM","-DPOLY1305_ASM",
+]
+
+cxx_library(
+  name = 'ssl',
+  header_namespace = '',
+  compiler_flags = ["-fPIC","-m64"],
+  preprocessor_flags = [
+    "-DNDEBUG", 
+    '-DOPENSSLDIR="' + openssl_dir + '"',
+    '-DENGINESDIR="' + engines_dir + '"',
+  ], 
+  platform_preprocessor_flags = [
+    ('linux.*', linux_preprocessor_flags), 
+  ],
+  headers = subdir_glob([
+    ('', '*.h'),
+    ('', 'ssl/**/*.h'),
+    ('include', '**/*.h'),
+  ]), 
+  srcs = glob([
+    'ssl/**/*.c', 
+  ]),
+  linker_flags = [
+    "-Wl,-znodelete",
+    "-Wl,-Bsymbolic",
+    "-Wa,--noexecstack", 
+  ],
+  exported_linker_flags = [
+    "-pthread",
+    "-ldl", 
+  ],
+  deps = [
+    ":crypto", 
   ],
   visibility = [
-    'PUBLIC',
-  ],
+    'PUBLIC', 
+  ]
+)
+
+cxx_library(
+  name = 'openssl', 
+  header_namespace = '', 
+  exported_headers = subdir_glob([
+    ('include', 'openssl/**/*.h'), 
+  ]), 
+  deps = [
+    ':crypto', 
+    ':ssl', 
+  ], 
+  platform_deps = [
+    ('linux.*', [ opensslconf(configure_linux) ]), 
+  ], 
+  visibility = [
+    'PUBLIC', 
+  ], 
 )
