@@ -64,7 +64,7 @@ def configure(platform):
       'mkdir -p $OUT', 
       'cp -r $SRCDIR/. $TMP', 
       'cd $TMP', 
-      './Configure shared ' + platform, 
+      './Configure shared no-asm ' + platform, 
     ] + [ 
       'perl "-I." -Mconfigdata "util/dofile.pl" "-oMakefile" ' + x + ' > ' + splitext(x)[0] for x in in_files 
     ] + [ 
