@@ -48,29 +48,21 @@ tools = glob([
 ])
 
 xcode_developer_dir = read_config('apple', 'xcode_developer_dir', '$DEVELOPER_DIR')
-android_ndk = read_config('ndk', 'ndk_path', '$ANDROID_NDK')
 
-def configure(platform): 
-  name = clean('configure-' + platform)
-  genrule(
-    name = name,
-    out = 'out',
-    srcs = build_srcs, 
-    cmd = ' && '.join([
-      'DEVELOPER_DIR="' + xcode_developer_dir + '"', 
-      'ANDROID_NDK="' + android_ndk + '"', 
-      'cp -r $SRCDIR/. $TMP', 
-      'mkdir -p $OUT', 
-      'cd $TMP', 
-      'chmod +x ' + ' '.join([ '$TMP/' + x for x in tools ]), 
-      './Configure shared --prefix=$OUT/build --openssldir=$OUT/build/openssl ' + platform, 
-      'make include/openssl/opensslconf.h', 
-      'cp -r $TMP/. $OUT', 
-    ])
-  )
-  return ':' + name
+android_ndk = read_config('ndk', 'ndk_path', '$ANDROID_NDK')
+ndk_gcc_version = read_config('ndk', 'gcc_version', '4.9')
+
+openssl_dir = read_config('openssl', 'openssl_dir', '/usr/local/ssl')
 
 def make(platform): 
+  # TODO: We could query for these
+  ndk_toolchains = [
+    'x86-' + ndk_gcc_version, 
+    'x86_64-' + ndk_gcc_version,
+    'arm-linux-androideabi-' + ndk_gcc_version, 
+    'aarch64-linux-android-' + ndk_gcc_version, 
+  ]
+
   name = clean('make-' + platform)
   genrule(
     name = name,
@@ -79,13 +71,18 @@ def make(platform):
     cmd = ' && '.join([
       'DEVELOPER_DIR="' + xcode_developer_dir + '"', 
       'ANDROID_NDK="' + android_ndk + '"', 
+    ] + [
+      'PATH=$ANDROID_NDK/toolchains/' + x + '/prebuilt/linux-x86_64/bin:$PATH' for x in ndk_toolchains
+    ] + [
+      'PATH=$ANDROID_NDK/toolchains/' + x + '/prebuilt/darwin-x86_64/bin:$PATH' for x in ndk_toolchains
+    ] + [
       'cp -r $SRCDIR/. $TMP', 
       'mkdir -p $OUT', 
       'cd $TMP', 
       'chmod +x ' + ' '.join([ '$TMP/' + x for x in tools ]), 
-      './Configure shared --prefix=$OUT --openssldir=$OUT/openssl ' + platform, 
+      './Configure no-shared no-asm no-zlib no-tests no-deprecated --prefix=$OUT --openssldir=' + openssl_dir + ' ' + platform, 
       'make -j4', 
-      'make install', 
+      'make install_sw', 
     ])
   )
   return ':' + name
@@ -95,40 +92,36 @@ macos_make = make('darwin64-x86_64-cc')
 windows_make = make('VC-WIN64I')
 iphoneos_make = make('ios64-xcrun')
 iphonesimulator_make = make('iossimulator-xcrun')
-android_make = make('android-x86_64')
+android_x86_make = make('android-x86')
+android_x86_64_make = make('android-x86_64')
+android_arm_make = make('android-arm')
 
 prebuilt_cxx_library(
   name = 'crypto',
   header_namespace = 'openssl',
-  platform_shared_lib = [
-    ('macos.*', extract(macos_make, 'lib/libcrypto.dylib')), 
-    ('linux.*', extract(linux_make, 'lib/libcrypto.so')), 
-    ('iphoneos.*', extract(iphoneos_make, 'lib/libcrypto.dylib')), 
-    ('iphonesimulator.*', extract(iphonesimulator_make, 'lib/libcrypto.dylib')), 
-  ], 
   platform_static_lib = [
     ('macos.*', extract(macos_make, 'lib/libcrypto.a')), 
     ('linux.*', extract(linux_make, 'lib/libcrypto.a')), 
     ('iphoneos.*', extract(iphoneos_make, 'lib/libcrypto.a')), 
     ('iphonesimulator.*', extract(iphonesimulator_make, 'lib/libcrypto.a')), 
+    ('android-x86.*', extract(android_x86_make, 'lib/libcrypto.a')), 
+    ('android-arm.*', extract(android_arm_make, 'lib/libcrypto.a')), 
   ], 
+  preferred_linkage = 'static', 
 )
 
 prebuilt_cxx_library(
   name = 'ssl',
   header_namespace = 'openssl',
-  platform_shared_lib = [
-    ('macos.*', extract(macos_make, 'lib/libssl.dylib')), 
-    ('linux.*', extract(linux_make, 'lib/libssl.so')), 
-    ('iphoneos.*', extract(iphoneos_make, 'lib/libssl.dylib')), 
-    ('iphonesimulator.*', extract(iphonesimulator_make, 'lib/libssl.dylib')), 
-  ], 
   platform_static_lib = [
     ('macos.*', extract(macos_make, 'lib/libssl.a')), 
     ('linux.*', extract(linux_make, 'lib/libssl.a')), 
     ('iphoneos.*', extract(iphoneos_make, 'lib/libssl.a')), 
     ('iphonesimulator.*', extract(iphonesimulator_make, 'lib/libssl.a')), 
+    ('android-x86.*', extract(android_x86_make, 'lib/libssl.a')), 
+    ('android-arm.*', extract(android_arm_make, 'lib/libssl.a')), 
   ], 
+  preferred_linkage = 'static', 
 )
 
 def platform_headers(configure):
@@ -159,7 +152,8 @@ cxx_library(
     ('windows.*', [ platform_headers(windows_make) ]), 
     ('iphoneos.*', [ platform_headers(iphoneos_make) ]), 
     ('iphonesimulator.*', [ platform_headers(iphonesimulator_make) ]), 
-    ('android.*', [ platform_headers(android_make) ]), 
+    ('android-x86.*', [ platform_headers(android_x86_make) ]), 
+    ('android-arm.*', [ platform_headers(android_arm_make) ]), 
   ], 
   visibility = [
     'PUBLIC',
