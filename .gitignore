@@ -118,3 +118,9 @@ ms/nt.mak
 ms/ntdll.mak
 ms/ssleay32.def
 ms/version32.rc
+
+
+/buck-out
+/.buckd
+/buckaroo
+.buckconfig.local
