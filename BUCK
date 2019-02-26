@@ -50,6 +50,9 @@ cxx_library(
     ('android-x86.*', [ platform_headers(android_x86_make) ]),
     ('android-arm.*', [ platform_headers(android_arm_make) ]),
   ],
+  exported_post_platform_linker_flags = [
+    ('linux.*', [ '-ldl' ]),
+  ],
   exported_deps = [
     ':crypto',
     ':ssl',
