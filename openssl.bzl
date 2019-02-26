@@ -70,10 +70,11 @@ def make(platform):
       'mkdir -p $OUT',
       'cd $TMP',
       'chmod +x ' + ' '.join([ '$TMP/' + x for x in tools ]),
-      './Configure no-shared no-asm no-zlib no-tests no-deprecated --install_prefix=$OUT ' + platform,
+      './Configure no-shared no-asm no-zlib no-tests --install_prefix=$OUT ' + platform,
       'make',
       'make install_sw',
-    ])
+    ]),
+    cacheable = False,
   )
 
   return ':' + name
@@ -84,7 +85,6 @@ def platform_headers(make):
     name = name,
     header_only = True,
     header_namespace = '',
-    # exported_headers = dict([ (x, extract(configure, 'usr/local/ssl/include/openssl/' + x)) for x in headers ]),
     header_dirs = [ extract_folder(make, 'usr/local/ssl/include') ],
   )
   return ':' + name
