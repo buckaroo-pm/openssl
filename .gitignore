@@ -124,3 +124,4 @@ ms/version32.rc
 /.buckd
 /buckaroo
 .buckconfig.local
+buckaroo_macros.bzl
