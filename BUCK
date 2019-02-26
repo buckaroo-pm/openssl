@@ -22,6 +22,9 @@ prebuilt_cxx_library(
     ('android-arm.*', extract(android_arm_make, 'usr/local/ssl/lib/libcrypto.a')),
   ],
   preferred_linkage = 'static',
+  exported_post_platform_linker_flags = [
+    ('linux.*', [ '-ldl' ]),
+  ],
 )
 
 prebuilt_cxx_library(
@@ -49,9 +52,6 @@ cxx_library(
     ('iphonesimulator.*', [ platform_headers(iphonesimulator_make) ]),
     ('android-x86.*', [ platform_headers(android_x86_make) ]),
     ('android-arm.*', [ platform_headers(android_arm_make) ]),
-  ],
-  exported_post_platform_linker_flags = [
-    ('linux.*', [ '-ldl' ]),
   ],
   exported_deps = [
     ':crypto',
