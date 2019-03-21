@@ -79,12 +79,12 @@ def make(platform):
 
   return ':' + name
 
-def platform_headers(make):
+def platform_headers(make, folder = 'usr/local/ssl/include'):
   name = clean('openssl-headers-' + make)
   native.prebuilt_cxx_library(
     name = name,
     header_only = True,
     header_namespace = '',
-    header_dirs = [ extract_folder(make, 'usr/local/ssl/include') ],
+    header_dirs = [ extract_folder(make, folder) ],
   )
   return ':' + name

@@ -17,9 +17,11 @@ def extract(rule, path):
     native.genrule(
       name = name,
       out = filename,
-      cmd = 'cp $(location '+rule+')/'+ path +' $OUT')
+      cmd = 'cp $(location ' + rule + ')/' + path + ' $OUT',
+      cmd_exe = 'COPY $(location ' + rule + ')\\' + path.replace('/', '\\') + ' $OUT',
+    )
 
-  return ':'+name
+  return ':' + name
 
 def extract_folder(rule, path):
   name = 'extract-folder-' + (
@@ -28,13 +30,15 @@ def extract_folder(rule, path):
       .replace('/','-')
       .replace('.','-'))
 
-  if not native.rule_exists(':'+name):
+  if not native.rule_exists(':' + name):
     native.genrule(
       name = name,
       out = 'out',
-      cmd = 'mkdir $OUT && cd $OUT && cp -r $(location '+rule+')/'+ path +'/. .')
+      cmd = 'mkdir $OUT && cd $OUT && cp -r $(location ' + rule + ')/' + path + '/. .',
+      cmd_exe = 'xcopy $(location ' + rule + ')\\' + path.replace('/', '\\') + ' $OUT /S /I',
+    )
 
-  return ':'+name
+  return ':' + name
 
 def pkgconfig(name, find, search = None, visibility = []):
   env = 'PKG_CONFIG_PATH=' + search + ' ' if search else ''
